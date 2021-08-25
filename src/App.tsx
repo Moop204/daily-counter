@@ -2,9 +2,13 @@ import { FunctionComponent, useEffect, useState } from "react";
 import {
   Badge,
   Button,
+  ButtonGroup,
+  ButtonToolbar,
   Card,
   Col,
   Container,
+  Form,
+  Modal,
   Row,
   ToggleButton,
 } from "react-bootstrap";
@@ -120,24 +124,123 @@ const MultiTask: FunctionComponent<IMultiTask> = ({
   );
 };
 
-function App() {
-  const [checked, setChecked] = useState(false);
-  const [bgColour, setBgColour] = useState("light");
+interface IAddTaskModal {
+  show: boolean;
+  handleClose: any;
+  addTask: (task: ITask) => void;
+}
 
-  useEffect(() => {
-    setBgColour(checked ? "#A7F1A8" : "#F5F5F5");
-  }, [checked]);
+const AddTaskModal: FunctionComponent<IAddTaskModal> = ({
+  show,
+  handleClose,
+  addTask,
+}) => {
+  const [formType, setFormType] = useState("check");
+
+  return (
+    <Modal show={show} onHide={handleClose}>
+      <Modal.Header>
+        <Modal.Title>Add Task</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Row>
+          <Col>
+            <Button type="button" value="check">
+              One-time
+            </Button>
+          </Col>
+
+          <Col>
+            <Button type="button" value="multi">
+              Multi-action
+            </Button>
+          </Col>
+        </Row>
+
+        <Form.Group className="mb-3" controlId="formBasicEmail">
+          <Form.Label>Description</Form.Label>
+          <Form.Control type="email" placeholder="Enter email" />
+          <Form.Text className="text-muted">
+            Short text describing task.
+          </Form.Text>
+        </Form.Group>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Close
+        </Button>
+        {/* <Button variant="primary" onClick={() => { 
+          let newTask: ITask; 
+          if(formType === "check") {
+            newTask = { description: }
+          }
+          addTask()
+          handleClose(); } }>
+          Save Changes
+        </Button> */}
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+function App() {
+  const [addTaskShow, setAddTaskShow] = useState(false);
+  const handleClose = () => setAddTaskShow(false);
+  const handleOpen = () => setAddTaskShow(true);
+  const [tasks, setTasks] = useState([
+    { description: "Test1", initialValue: 2, totalValue: 10 },
+    { description: "Test2", initialValue: false },
+  ] as (ICheckTask | IMultiTask)[]);
+
+  const addTask = (task: ITask) => {
+    tasks.push(task);
+  };
 
   return (
     <div style={{ padding: "12px", backgroundColor: "#effaae" }}>
-      <h1>Daily Counters</h1>
       <Row>
-        <Col>
-          <MultiTask description="Eat food " initialValue={0} totalValue={3} />
+        <Col xl={10}>
+          <h1>Daily Counters</h1>
         </Col>
         <Col>
-          <CheckTask description="Make your bed" initialValue={false} />
+          <ButtonToolbar aria-label="Toolbar with button groups">
+            <ButtonGroup className="me-2" aria-label="First group">
+              <Button onClick={handleOpen}>+</Button>
+            </ButtonGroup>
+          </ButtonToolbar>
         </Col>
+      </Row>
+
+      <AddTaskModal
+        show={addTaskShow}
+        handleClose={handleClose}
+        addTask={addTask}
+      />
+
+      <Row>
+        {tasks.map((task: any) => {
+          if (task.totalValue) {
+            return (
+              <div style={{ margin: "4px" }}>
+                <MultiTask
+                  description={task.description}
+                  initialValue={task.initialValue}
+                  totalValue={task.totalValue}
+                />
+              </div>
+            );
+          } else {
+            return (
+              <div style={{ margin: "4px" }}>
+                <CheckTask
+                  description={task.description}
+                  initialValue={task.initialValue}
+                />
+              </div>
+            );
+          }
+        })}
       </Row>
     </div>
   );
