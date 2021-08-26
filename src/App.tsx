@@ -1,4 +1,5 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { Formik } from "formik";
+import { Dispatch, FunctionComponent, useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -128,12 +129,14 @@ interface IAddTaskModal {
   show: boolean;
   handleClose: any;
   addTask: (task: ITask) => void;
+  taskDescriptor: VarState;
 }
 
 const AddTaskModal: FunctionComponent<IAddTaskModal> = ({
   show,
   handleClose,
   addTask,
+  taskDescriptor,
 }) => {
   const [formType, setFormType] = useState("check");
 
@@ -157,32 +160,64 @@ const AddTaskModal: FunctionComponent<IAddTaskModal> = ({
           </Col>
         </Row>
 
-        <Form.Group className="mb-3" controlId="formBasicEmail">
-          <Form.Label>Description</Form.Label>
-          <Form.Control type="email" placeholder="Enter email" />
-          <Form.Text className="text-muted">
-            Short text describing task.
-          </Form.Text>
-        </Form.Group>
+        <Formik
+          initialValues={{
+            description: "",
+          }}
+          onSubmit={(values) => {
+            console.log(values);
+            const task: ICheckTask | IMultiTask = {
+              description: values.description,
+              initialValue: false,
+            };
+            addTask(task);
+          }}
+          render={({
+            handleChange,
+            handleSubmit,
+            handleBlur,
+            values,
+            errors,
+          }) => {
+            return (
+              <Form.Group className="mb-3" controlId="description">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="Enter description."
+                  value={values.description}
+                />
+                <Form.Text className="text-muted">
+                  Short text describing task.
+                </Form.Text>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={handleClose}>
+                    Close
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      handleSubmit();
+                      handleClose();
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </Modal.Footer>
+              </Form.Group>
+            );
+          }}
+        />
       </Modal.Body>
-
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Close
-        </Button>
-        {/* <Button variant="primary" onClick={() => { 
-          let newTask: ITask; 
-          if(formType === "check") {
-            newTask = { description: }
-          }
-          addTask()
-          handleClose(); } }>
-          Save Changes
-        </Button> */}
-      </Modal.Footer>
     </Modal>
   );
 };
+
+interface VarState {
+  var: any;
+  updateVar: Dispatch<any>;
+}
 
 function App() {
   const [addTaskShow, setAddTaskShow] = useState(false);
@@ -193,8 +228,17 @@ function App() {
     { description: "Test2", initialValue: false },
   ] as (ICheckTask | IMultiTask)[]);
 
-  const addTask = (task: ITask) => {
-    tasks.push(task);
+  const addTask = (task: ICheckTask | IMultiTask) => {
+    setTasks((tasks) => [...tasks, task]);
+  };
+
+  useEffect(() => {
+    console.log(tasks);
+  }, [tasks]);
+
+  const taskDescriptor: VarState = {
+    var: tasks,
+    updateVar: setTasks,
   };
 
   return (
@@ -216,6 +260,7 @@ function App() {
         show={addTaskShow}
         handleClose={handleClose}
         addTask={addTask}
+        taskDescriptor={taskDescriptor}
       />
 
       <Row>
