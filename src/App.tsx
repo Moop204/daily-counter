@@ -12,6 +12,7 @@ import {
 import { CheckTask } from "./components/checktask/CheckTask";
 import { MultiTask } from "./components/multitask/MultiTask";
 import { ICheckTask, IMultiTask, ValidTask } from "./components/types";
+import * as Yup from "yup";
 
 interface IAddTaskModal {
   show: boolean;
@@ -19,6 +20,17 @@ interface IAddTaskModal {
   addTask: (task: ValidTask) => void;
   taskDescriptor: VarState;
 }
+
+const validationCheckSchema = Yup.object().shape({
+  description: Yup.string().required(),
+  // initialValue: Yup.boolean().required(),
+});
+
+const validationMultiSchema = Yup.object().shape({
+  description: Yup.string().required(),
+  initialValue: Yup.string().required(),
+  totalValue: Yup.number().required().positive(),
+});
 
 const AddTaskModal: FunctionComponent<IAddTaskModal> = ({
   show,
@@ -36,67 +48,173 @@ const AddTaskModal: FunctionComponent<IAddTaskModal> = ({
       <Modal.Body>
         <Row>
           <Col>
-            <Button type="button" value="check">
+            <Button
+              type="button"
+              value="check"
+              onClick={() => setFormType("check")}
+            >
               One-time
             </Button>
           </Col>
 
           <Col>
-            <Button type="button" value="multi">
+            <Button
+              type="button"
+              value="multi"
+              onClick={() => setFormType("multi")}
+            >
               Multi-action
             </Button>
           </Col>
         </Row>
 
-        <Formik
-          initialValues={{
-            description: "",
-          }}
-          onSubmit={(values) => {
-            console.log(values);
-            const task: ICheckTask | IMultiTask = {
-              description: values.description,
+        {formType === "check" && (
+          <Formik
+            initialValues={{
+              description: "",
               initialValue: false,
-            };
-            addTask(task);
-          }}
-          render={({
-            handleChange,
-            handleSubmit,
-            handleBlur,
-            values,
-            errors,
-          }) => {
-            return (
-              <Form.Group className="mb-3" controlId="description">
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  onChange={handleChange}
-                  type="text"
-                  placeholder="Enter description."
-                  value={values.description}
-                />
-                <Form.Text className="text-muted">
-                  Short text describing task.
-                </Form.Text>
-                <Modal.Footer>
-                  <Button variant="secondary" onClick={handleClose}>
-                    Close
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      handleSubmit();
-                      handleClose();
-                    }}
-                  >
-                    Save Changes
-                  </Button>
-                </Modal.Footer>
-              </Form.Group>
-            );
-          }}
-        />
+            }}
+            onSubmit={(values) => {
+              console.log(values);
+              const task: ICheckTask | IMultiTask = {
+                description: values.description,
+                initialValue: false,
+              };
+              addTask(task);
+              handleClose();
+            }}
+            validationSchema={validationCheckSchema}
+            render={({
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              values,
+              errors,
+              touched,
+            }) => {
+              return (
+                <Form.Group className="mb-3" controlId="description">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="Enter description."
+                    value={values.description}
+                    isValid={touched.description && !errors.description}
+                  />
+                  <Form.Text className="text-muted">
+                    Short text describing task.
+                  </Form.Text>
+                  <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                      Close
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (!errors.description) handleSubmit();
+                      }}
+                    >
+                      Save Changes
+                    </Button>
+                  </Modal.Footer>
+                </Form.Group>
+              );
+            }}
+          />
+        )}
+        {formType === "multi" && (
+          <Formik
+            initialValues={{
+              description: "",
+              initialValue: 0,
+              totalValue: 1,
+            }}
+            validationSchema={validationMultiSchema}
+            onSubmit={(values, e) => {
+              console.log(e);
+              console.log(values);
+              const task: ValidTask = {
+                description: values.description,
+                initialValue: 0,
+                totalValue: values.totalValue,
+              };
+              addTask(task);
+              handleClose();
+            }}
+            render={({
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              values,
+              errors,
+              touched,
+            }) => {
+              return (
+                <>
+                  <Form.Group className="mb-3" controlId="description">
+                    <Form.Label>Description</Form.Label>
+                    <Form.Control
+                      onChange={(e) => {
+                        handleChange(e);
+                      }}
+                      type="text"
+                      placeholder="Enter description."
+                      value={values.description}
+                      isValid={touched.description && !errors.description}
+                      required
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      Please provide a valid city.
+                    </Form.Control.Feedback>
+                    <Form.Text className="text-muted">
+                      Short text describing task.
+                    </Form.Text>
+                  </Form.Group>
+                  <Form.Group className="mb-3" controlId="totalValue">
+                    <Form.Label>Total Actions</Form.Label>
+                    <Form.Control
+                      onChange={(e) => {
+                        if (e.target.value.match(/^[0-9]*$/)) handleChange(e);
+                      }}
+                      type="text"
+                      placeholder="Enter total actions."
+                      value={values.totalValue}
+                      isValid={!errors.totalValue}
+                      required
+                    />
+                    <Form.Text className="text-muted">
+                      Number of actions required to complete task.
+                    </Form.Text>
+                  </Form.Group>
+
+                  <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                      Close
+                    </Button>
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      onClick={() => {
+                        if (
+                          !errors.description ||
+                          !errors.initialValue ||
+                          !errors.totalValue
+                        ) {
+                          handleSubmit();
+                        } else {
+                          console.log(!errors.description);
+                        }
+                      }}
+                    >
+                      Save Changes
+                    </Button>
+                  </Modal.Footer>
+                </>
+              );
+            }}
+          />
+        )}
       </Modal.Body>
     </Modal>
   );
