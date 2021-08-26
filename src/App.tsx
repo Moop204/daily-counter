@@ -1,134 +1,22 @@
 import { Formik } from "formik";
 import { Dispatch, FunctionComponent, useEffect, useState } from "react";
 import {
-  Badge,
   Button,
   ButtonGroup,
   ButtonToolbar,
-  Card,
   Col,
-  Container,
   Form,
   Modal,
   Row,
-  ToggleButton,
 } from "react-bootstrap";
-
-interface ITask {
-  description: string;
-  initialValue: any;
-}
-
-interface ICheckTask extends ITask {
-  initialValue: boolean;
-}
-
-const CheckTask: FunctionComponent<ICheckTask> = ({
-  description,
-  initialValue,
-}) => {
-  const [checked, setChecked] = useState(initialValue);
-  const [bgColour, setBgColour] = useState(
-    initialValue ? "#A7F1A8" : "#F5F5F5"
-  );
-
-  useEffect(() => {
-    setBgColour(checked ? "#A7F1A8" : "#F5F5F5");
-  }, [checked]);
-
-  return (
-    <Card style={{ backgroundColor: bgColour }}>
-      <Card.Body>
-        <Row>
-          <Col
-            className="col-xs-3 col-sm-5 col-md-7 col-lg-9"
-            style={{ fontSize: "x-large", textOverflow: "ellipses" }}
-          >
-            {description}
-          </Col>
-          <Col xs="auto">
-            <ToggleButton
-              className="mb-2"
-              id="toggle-check"
-              type="checkbox"
-              variant="outline-success"
-              value={checked ? "1" : "0"}
-              checked={checked}
-              onChange={(e) => {
-                setChecked(!checked);
-                console.log(checked);
-              }}
-              style={{ margin: "!0px" }}
-            >
-              Completed
-            </ToggleButton>
-          </Col>
-        </Row>
-      </Card.Body>{" "}
-    </Card>
-  );
-};
-
-interface IMultiTask extends ITask {
-  initialValue: number;
-  totalValue: number;
-}
-
-const MultiTask: FunctionComponent<IMultiTask> = ({
-  description,
-  initialValue,
-  totalValue,
-}) => {
-  const [count, setCount] = useState(initialValue);
-  const [bgColour, setBgColour] = useState(
-    initialValue ? "#A7F1A8" : "#F5F5F5"
-  );
-
-  useEffect(() => {
-    setBgColour(count >= totalValue ? "#A7F1A8" : "#F5F5F5");
-  }, [count, totalValue]);
-
-  return (
-    <Card style={{ backgroundColor: bgColour }}>
-      <Card.Body>
-        <Row>
-          <Col
-            className="col-xs-3 col-sm-5 col-md-7 col-lg-9"
-            style={{ fontSize: "x-large", textOverflow: "ellipses" }}
-          >
-            {description}
-          </Col>
-          <Col xs="auto">
-            <Button
-              className={
-                count === totalValue
-                  ? "mb-2 active .btn-outline-success"
-                  : "mb-2"
-              }
-              id="multi-button"
-              variant="outline-success"
-              onClick={() => {
-                const newCount = count + 1;
-                setCount(newCount > totalValue ? totalValue : newCount);
-                console.log(count);
-              }}
-            >
-              Complete{" "}
-              <Badge style={{ backgroundColor: "#A7F1A8" }}>
-                {count}/{totalValue}
-              </Badge>
-            </Button>
-          </Col>
-        </Row>
-      </Card.Body>{" "}
-    </Card>
-  );
-};
+import { CheckTask } from "./components/checktask/CheckTask";
+import { MultiTask } from "./components/multitask/MultiTask";
+import { ICheckTask, IMultiTask, ValidTask } from "./components/types";
 
 interface IAddTaskModal {
   show: boolean;
   handleClose: any;
-  addTask: (task: ITask) => void;
+  addTask: (task: ValidTask) => void;
   taskDescriptor: VarState;
 }
 
@@ -226,9 +114,9 @@ function App() {
   const [tasks, setTasks] = useState([
     { description: "Test1", initialValue: 2, totalValue: 10 },
     { description: "Test2", initialValue: false },
-  ] as (ICheckTask | IMultiTask)[]);
+  ] as ValidTask[]);
 
-  const addTask = (task: ICheckTask | IMultiTask) => {
+  const addTask = (task: ValidTask) => {
     setTasks((tasks) => [...tasks, task]);
   };
 
