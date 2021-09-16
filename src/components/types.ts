@@ -8,8 +8,10 @@ interface ICheckTask extends ITask {
 }
 
 interface IMultiTask extends ITask {
+  index?: number;
   initialValue: number;
   totalValue: number;
+  updateCounter?: (index:number, value: number) => void;
 }
 
 type ValidTask = ICheckTask | IMultiTask;

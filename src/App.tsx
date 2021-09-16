@@ -13,6 +13,7 @@ import { CheckTask } from "./components/checktask/CheckTask";
 import { MultiTask } from "./components/multitask/MultiTask";
 import { ICheckTask, IMultiTask, ValidTask } from "./components/types";
 import * as Yup from "yup";
+import { string } from "yup/lib/locale";
 
 interface IAddTaskModal {
   show: boolean;
@@ -229,23 +230,58 @@ function App() {
   const [addTaskShow, setAddTaskShow] = useState(false);
   const handleClose = () => setAddTaskShow(false);
   const handleOpen = () => setAddTaskShow(true);
-  const [tasks, setTasks] = useState([
-    { description: "Test1", initialValue: 2, totalValue: 10 },
-    { description: "Test2", initialValue: false },
-  ] as ValidTask[]);
+  const [tasks, setTasks] = useState<ValidTask[] | null>(
+  //   [
+  //   { description: "Test1", initialValue: 2, totalValue: 10 },
+  //   { description: "Test2", initialValue: false },
+  // ]
+  null);
 
   const addTask = (task: ValidTask) => {
-    setTasks((tasks) => [...tasks, task]);
+    if(tasks) {
+      setTasks((tasks) => [...tasks as ValidTask[], task]);
+    } else {
+      setTasks([task]);
+    }
   };
 
+  // const updateCount 
+
   useEffect(() => {
-    console.log(tasks);
+    // TODO: Disable join input
+    if(tasks) {
+      const store = tasks.map((task) => JSON.stringify(task)).join("|");
+      console.log("STORED");
+      console.log(store);
+      localStorage.setItem('tasks', store);  
+    }
   }, [tasks]);
 
   const taskDescriptor: VarState = {
     var: tasks,
     updateVar: setTasks,
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('tasks') as string;
+    const storedTasks = stored?.split('|').map((stringTask) => { 
+      const parsed = JSON.parse(stringTask); 
+      console.log(stringTask); 
+      return parsed;
+    } ) as ValidTask[];
+    console.log("SET");
+    console.log(storedTasks);
+    setTasks(storedTasks);
+  }, []);
+
+
+  // Move to context?
+  const updateTaskCounter = (index: number, value: number) => {
+    if(tasks && tasks[index]) {
+      (tasks[index] as IMultiTask).initialValue = value;
+      setTasks((tasks) => [...tasks as ValidTask[]]);
+    }
+  }
 
   return (
     <div style={{ padding: "12px", backgroundColor: "#effaae" }}>
@@ -270,18 +306,22 @@ function App() {
       />
 
       <Row>
-        {tasks.map((task: any) => {
-          if (task.totalValue) {
+        {tasks && tasks.map((task: ValidTask, index: number) => {
+          if ((task as IMultiTask).totalValue) {
+            task = task as IMultiTask;
             return (
               <div style={{ margin: "4px" }}>
                 <MultiTask
+                  index={index}
                   description={task.description}
                   initialValue={task.initialValue}
                   totalValue={task.totalValue}
+                  updateCounter={updateTaskCounter}
                 />
               </div>
             );
           } else {
+            task = task as ICheckTask;
             return (
               <div style={{ margin: "4px" }}>
                 <CheckTask

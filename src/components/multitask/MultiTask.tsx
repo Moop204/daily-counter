@@ -6,6 +6,8 @@ const MultiTask: FunctionComponent<IMultiTask> = ({
   description,
   initialValue,
   totalValue,
+  updateCounter, 
+  index
 }) => {
   const [count, setCount] = useState(initialValue);
   const [bgColour, setBgColour] = useState(
@@ -38,6 +40,7 @@ const MultiTask: FunctionComponent<IMultiTask> = ({
               onClick={() => {
                 const newCount = count + 1;
                 setCount(newCount > totalValue ? totalValue : newCount);
+                updateCounter ? updateCounter(index? index: 0, newCount) : console.log("bad") ;
                 console.log(count);
               }}
             >
